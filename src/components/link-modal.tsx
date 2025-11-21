@@ -7,13 +7,28 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useToast } from "@/hooks/use-toast"
+
+type LinkShape = {
+  id: string
+  favicon: string
+  shortUrl: string
+  fullUrl: string
+  description: string
+  clicks: number
+  createdAt: string
+  isActive: boolean
+}
 
 interface LinkModalProps {
   isOpen: boolean
   onClose: () => void
+  onCreate?: (link: LinkShape) => void
 }
 
-export function LinkModal({ isOpen, onClose }: LinkModalProps) {
+export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
+  const { toast } = useToast()
+  
   if (!isOpen) return null
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -159,7 +174,33 @@ export function LinkModal({ isOpen, onClose }: LinkModalProps) {
             <div className="border-t border-border" />
 
             {/* Create Link Button */}
-            <Button className="w-full gap-2">
+            <Button className="w-full gap-2" onClick={() => {
+              try {
+                const link: LinkShape = {
+                  id: Date.now().toString(),
+                  favicon: "",
+                  shortUrl: "links.sh/p0g8x1e",
+                  fullUrl: "",
+                  description: "",
+                  clicks: 0,
+                  createdAt: "just now",
+                  isActive: true,
+                }
+                onCreate?.(link)
+                onClose()
+                
+                toast({
+                  title: "Success!",
+                  description: "Link created successfully.",
+                })
+              } catch (error) {
+                toast({
+                  title: "Error",
+                  description: "Failed to create link. Please try again.",
+                  variant: "error",
+                })
+              }
+            }}>
               <LinkIcon className="h-4 w-4" />
               Create Link
             </Button>

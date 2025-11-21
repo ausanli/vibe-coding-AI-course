@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useLinks } from "@/hooks/use-links"
 import { RefreshCw, HelpCircle, Tag, Folder, Target, Calendar, Lock, TrendingUp } from "lucide-react"
 
-export function LinkDetailForm() {
+export function LinkDetailForm({ id }: { id: string }) {
+  const { getLinkById, updateLink } = useLinks()
+  const link = getLinkById(id)
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Short Link Section */}
@@ -16,7 +19,7 @@ export function LinkDetailForm() {
         <Label htmlFor="short-link">Short Link</Label>
         <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2 border border-border">
-            <Select defaultValue="links.sh">
+            <Select defaultValue="links.sh" onValueChange={() => {}}>
               <SelectTrigger className="w-[140px] border-0 border-r border-border">
                 <SelectValue />
               </SelectTrigger>
@@ -25,7 +28,15 @@ export function LinkDetailForm() {
                 <SelectItem value="short.ly">short.ly</SelectItem>
               </SelectContent>
             </Select>
-            <Input id="short-link" defaultValue="pOg8x1e" className="flex-1 border-0 focus-visible:ring-0" />
+            <Input
+              id="short-link"
+              defaultValue={link?.shortUrl.split("/").pop() ?? ""}
+              onChange={(e) => {
+                const domain = (link?.shortUrl.includes("/") ? link?.shortUrl.split("/")[0] : "short.ly") || "short.ly"
+                updateLink(id, { shortUrl: `${domain}/${e.target.value}` })
+              }}
+              className="flex-1 border-0 focus-visible:ring-0"
+            />
           </div>
           <Button variant="ghost" size="icon" className="flex-shrink-0">
             <RefreshCw className="h-4 w-4" />
@@ -63,7 +74,7 @@ export function LinkDetailForm() {
           <Label htmlFor="folder">Folder</Label>
           <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
-        <Select defaultValue="links">
+        <Select defaultValue="links" onValueChange={() => {}}>
           <SelectTrigger id="folder">
             <div className="flex items-center gap-2">
               <div className="flex h-5 w-5 items-center justify-center rounded" style={{ backgroundColor: "#1c2b1c" }}>
@@ -91,7 +102,13 @@ export function LinkDetailForm() {
       {/* Description Section */}
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
-        <Textarea id="description" placeholder="Add a short description here…" className="min-h-[100px] resize-none" />
+        <Textarea
+          id="description"
+          placeholder="Add a short description here…"
+          defaultValue={link?.description ?? ""}
+          onChange={(e) => updateLink(id, { description: e.target.value })}
+          className="min-h-[100px] resize-none"
+        />
       </div>
 
       {/* Chips Section */}
@@ -122,6 +139,11 @@ export function LinkDetailForm() {
         <span>Created by adamsmith@gmail.com</span>
         <span>•</span>
         <span>2 hours ago</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end">
+        <Button onClick={() => { /* no-op for mock flow */ }}>Save</Button>
       </div>
     </div>
   )

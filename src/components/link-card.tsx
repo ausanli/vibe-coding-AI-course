@@ -26,7 +26,6 @@ export function LinkCard({ id, favicon, shortUrl, fullUrl, clicks, createdAt, is
             src={favicon || "/placeholder.svg"}
             alt="Site favicon"
             className="h-8 w-8 rounded"
-            crossOrigin="anonymous"
           />
         </div>
 
