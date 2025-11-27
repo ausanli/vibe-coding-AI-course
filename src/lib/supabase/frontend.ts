@@ -10,16 +10,14 @@ export type User = {
 };
 
 export type Link = {
-  id?: string;
-  favicon?: string | null;
-  short_url: string;
-  full_url: string;
-  description?: string | null;
-  clicks?: number | null;
-  created_at?: string | null;
-  is_active?: boolean | null;
-  user_id?: string | null;
-  [key: string]: any;
+  //id: string;
+  favicon: string;
+  shortUrl: string;
+  fullUrl: string;
+  description: string;
+  clicks: number;
+  //createdAt: string;
+  isActive: boolean;
 };
 
 export type Analytics = {
@@ -167,9 +165,15 @@ export async function deleteLink(id: string): Result<Link> {
  */
 export async function createLink(link: Link): Result<Link> {
   try {
+    // For testing purposes, force the user_id to the provided test user.
+    // This ensures links created from the frontend during testing are
+    // associated with a predictable user in the DB.
+    const TEST_USER_ID = "77dec93b-c4bb-439f-ae4c-3041a328b380";
+    const toInsert = { ...link, user_id: TEST_USER_ID };
+
     const { data, error } = await supabase
       .from("links")
-      .insert(link)
+      .insert(toInsert)
       .select()
       .maybeSingle();
     if (error) return { data: null, error };

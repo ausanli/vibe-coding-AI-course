@@ -1,30 +1,27 @@
 "use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Plus, Search } from "lucide-react"
-import { useState } from "react"
-import { LinkModal } from "./link-modal"
-import { useLinks } from "@/hooks/use-links"
-import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { LinkModal } from "./link-modal";
+import { useToast } from "@/hooks/use-toast";
+import { createLink, Link } from "@/lib/supabase/frontend";
 
-type LinkShape = {
-  id: string
-  favicon: string
-  shortUrl: string
-  fullUrl: string
-  description: string
-  clicks: number
-  createdAt: string
-  isActive: boolean
-}
+export function DashboardHeader({
+  onCreate,
+}: {
+  onCreate?: (link: Link) => void;
+}) {
+  const { toast } = useToast();
 
-export function DashboardHeader({ onCreate }: { onCreate?: (link: LinkShape) => void }) {
-  const { createLink } = useLinks()
-  const { toast } = useToast()
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
     <div className="flex flex-col gap-4">
       <LinkModal
@@ -32,18 +29,18 @@ export function DashboardHeader({ onCreate }: { onCreate?: (link: LinkShape) => 
         onClose={() => setIsModalOpen(false)}
         onCreate={(link) => {
           try {
-            createLink(link)
-            onCreate?.(link)
+            createLink(link);
+            onCreate?.(link);
             toast({
               title: "Success!",
               description: "Link created and added to your dashboard.",
-            })
+            });
           } catch (error) {
             toast({
               title: "Error",
               description: "Failed to add link to dashboard. Please try again.",
               variant: "error",
-            })
+            });
           }
         }}
       />
@@ -59,7 +56,9 @@ export function DashboardHeader({ onCreate }: { onCreate?: (link: LinkShape) => 
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsModalOpen(true)}>Create new link</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsModalOpen(true)}>
+              Create new link
+            </DropdownMenuItem>
             <DropdownMenuItem>Import from CSV</DropdownMenuItem>
             <DropdownMenuItem>Bulk create</DropdownMenuItem>
           </DropdownMenuContent>
@@ -82,5 +81,5 @@ export function DashboardHeader({ onCreate }: { onCreate?: (link: LinkShape) => 
         </div>
       </div>
     </div>
-  )
+  );
 }
