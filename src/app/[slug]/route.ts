@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+export async function GET(
+  _req: Request,
+  { params }: { params: { slug: string } }
+) {
   const slug = params.slug;
 
   // create a server-side supabase client (uses server keys / cookie store)
@@ -17,7 +20,10 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
       .maybeSingle();
 
     if (error) {
-      console.error("Supabase error looking up link by exact short_url:", error);
+      console.error(
+        "Supabase error looking up link by exact short_url:",
+        error
+      );
       // continue to try alternate lookup
     }
 
@@ -31,18 +37,27 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
         .limit(1)
         .maybeSingle();
       link = res.data as any;
-      if (res.error) console.error("Supabase error looking up link by trailing slug:", res.error);
+      if (res.error)
+        console.error(
+          "Supabase error looking up link by trailing slug:",
+          res.error
+        );
     }
 
     if (!link || !link.full_url) {
       // destination not found — redirect to a 302 error page
-      const redirectUrl = new URL("/302", process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3000");
+      const redirectUrl = new URL(
+        "/302",
+        process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3000"
+      );
       return NextResponse.redirect(redirectUrl, 302);
     }
 
     // Log analytic row (server-side so we can bypass RLS)
     try {
-      await supabase.from("analytics").insert({ link_id: link.id, clicked_at: new Date().toISOString() });
+      await supabase
+        .from("analytics")
+        .insert({ link_id: link.id, clicked_at: new Date().toISOString() });
     } catch (e) {
       console.error("Failed to insert analytics row:", e);
       // continue — don't block redirect on analytics failure
@@ -52,7 +67,10 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
     return NextResponse.redirect(link.full_url);
   } catch (err) {
     console.error("Unexpected error in redirect route:", err);
-    const redirectUrl = new URL("/302", process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3000");
+    const redirectUrl = new URL(
+      "/302",
+      process.env.NEXT_PUBLIC_SITE_ORIGIN || "http://localhost:3000"
+    );
     return NextResponse.redirect(redirectUrl, 302);
   }
 }

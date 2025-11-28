@@ -2,7 +2,9 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error(
@@ -13,9 +15,11 @@ if (!supabaseUrl || !supabaseKey) {
 export async function createClient(cookieStore?: ReturnType<typeof cookies>) {
   const cs = cookieStore ?? cookies();
 
-  return createServerClient(supabaseUrl!, supabaseKey!,
+  return createServerClient(
+    supabaseUrl!,
+    supabaseKey!,
     // cast to any because the library expects a specific cookie shape
-    ({
+    {
       cookies: {
         async getAll() {
           return (await cs).getAll();
@@ -32,6 +36,6 @@ export async function createClient(cookieStore?: ReturnType<typeof cookies>) {
           }
         },
       },
-    } as unknown as any)
+    } as unknown as any
   );
 }
