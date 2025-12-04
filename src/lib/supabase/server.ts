@@ -1,33 +1,21 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error(
-    "Supabase server client environment variables are missing. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY). See https://supabase.com/dashboard/project/_/settings/api"
-  );
-}
-
-export async function createClient(cookieStore?: ReturnType<typeof cookies>) {
-  const cs = cookieStore ?? cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
-    supabaseUrl!,
-    supabaseKey!,
-    // cast to any because the library expects a specific cookie shape
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
-        async getAll() {
-          return (await cs).getAll();
+        getAll() {
+          return cookieStore.getAll();
         },
-        setAll(cookiesToSet: { name: any; value: any; options: any }[]) {
+        setAll(cookiesToSet) {
           try {
-            (cookiesToSet || []).forEach(async ({ name, value, options }) =>
-              (await cs).set(name, value, options)
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
             );
           } catch {
             // The `setAll` method was called from a Server Component.
@@ -36,6 +24,6 @@ export async function createClient(cookieStore?: ReturnType<typeof cookies>) {
           }
         },
       },
-    } as unknown as any
+    }
   );
 }

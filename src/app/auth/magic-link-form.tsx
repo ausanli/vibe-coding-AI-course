@@ -37,11 +37,12 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
     setLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/auth/confirm`;
       const { data, error: signError } = await supabase.auth.signInWithOtp({
         email,
         options: {
           shouldCreateUser: true,
-          emailRedirectTo: "https://example.com/welcome",
+          emailRedirectTo: redirectUrl,
         },
       });
 

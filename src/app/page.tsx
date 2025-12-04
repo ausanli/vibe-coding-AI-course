@@ -1,22 +1,23 @@
-"use client"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { DashboardHeader } from "@/components/dashboard-header"
-import { LinkCard } from "@/components/link-card"
-import { useLinks } from "@/hooks/use-links"
+import { redirect } from "next/navigation";
+import { DashboardLayout } from "@/components/dashboard-layout";
 
-export default function Page() {
-  const { links } = useLinks()
+import { createClient } from "@/lib/supabase/server";
+import DashboardContent from "@/components/dashboard-content";
+
+export default async function Page() {
+  // server-side Supabase auth check
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
+    // redirect unauthenticated users to the auth page
+    redirect("/auth");
+  }
 
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6 p-8">
-        <DashboardHeader />
-        <div className="flex flex-col gap-3">
-          {links.map((link) => (
-            <LinkCard key={link.id} {...link} />
-          ))}
-        </div>
+        <DashboardContent />
       </div>
     </DashboardLayout>
-  )
+  );
 }
