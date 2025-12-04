@@ -37,7 +37,11 @@ export default function ConfirmPage() {
             refresh_token: refresh_token || undefined,
           });
           if (error) throw error;
-          toast({ title: "Signed in", description: "You were signed in successfully.", variant: "success" });
+          toast({
+            title: "Signed in",
+            description: "You were signed in successfully.",
+            variant: "success",
+          });
           // Redirect to an /auth page (middleware allows /auth paths for unauthenticated users)
           router.replace("/auth");
           return;
@@ -47,7 +51,11 @@ export default function ConfirmPage() {
         const token = params.get("token") || params.get("token_hash");
         if (token && type) {
           // Call our server-side confirm route (which will verify and set cookies)
-          const resp = await fetch(`/auth/confirm?token=${encodeURIComponent(token)}&type=${encodeURIComponent(type)}`);
+          const resp = await fetch(
+            `/auth/confirm?token=${encodeURIComponent(
+              token
+            )}&type=${encodeURIComponent(type)}`
+          );
           if (resp.ok) {
             router.replace("/auth");
             return;
@@ -59,7 +67,11 @@ export default function ConfirmPage() {
         throw new Error("No token found in URL");
       } catch (err: any) {
         console.error("Confirm flow error:", err);
-        toast({ title: "Sign-in failed", description: err?.message || String(err), variant: "error" });
+        toast({
+          title: "Sign-in failed",
+          description: err?.message || String(err),
+          variant: "error",
+        });
         // Redirect to auth page so user can try again
         router.replace("/auth");
       } finally {
@@ -72,7 +84,10 @@ export default function ConfirmPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="p-8 rounded-lg" style={{ backgroundColor: "#090909", border: "1px solid #2E2E2E" }}>
+      <div
+        className="p-8 rounded-lg"
+        style={{ backgroundColor: "#090909", border: "1px solid #2E2E2E" }}
+      >
         {loading ? <div>Signing you in…</div> : <div>Redirecting…</div>}
       </div>
     </div>
