@@ -2,10 +2,11 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface MagicLinkFormProps {
   onLinkSent: (email: string) => void;
@@ -18,6 +19,7 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
   const [error, setError] = useState("");
   const { toast } = useToast();
   const supabase = createClient();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +80,19 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
     }
   };
 
+  async function handleSignInWithGoogle(response: any) {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: response.credential,
+    });
+    if (error) console.error("Google sign-in error:", error);
+    else router.push("/");
+  }
+
+  useEffect(() => {
+    (window as any).handleSignInWithGoogle = handleSignInWithGoogle;
+  }, []);
+
   return (
     <div className="w-full max-w-md">
       <div
@@ -98,7 +113,7 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 mb-5">
           {/* Name Input */}
           <div>
             <label
@@ -202,6 +217,24 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
             )}
           </button>
         </form>
+        <div
+          id="g_id_onload"
+          data-client_id="688565126360-imqocb3ngfu5sav10rbbnmaqhn2udkg8.apps.googleusercontent.com"
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleSignInWithGoogle"
+          data-auto_prompt="false"
+        ></div>
+
+        <div
+          className="g_id_signin"
+          data-type="standard"
+          data-shape="rectangular"
+          data-theme="outline"
+          data-text="signin_with"
+          data-size="large"
+          data-logo_alignment="left"
+        ></div>
 
         {/* Footer */}
         <p className="text-center text-sm mt-6" style={{ color: "#BCBCBC" }}>
