@@ -40,20 +40,12 @@ export async function getUser(userId?: string): Result<User> {
   try {
     if (userId) {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("users")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
       if (error) return { data: null, error };
       if (data) return { data: data as User, error: null };
-      // fallback to users table
-      const { data: u, error: ue } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-      if (ue) return { data: null, error: ue };
-      return { data: (u || null) as User | null, error: null };
     }
 
     // no id provided — try auth user
@@ -62,9 +54,9 @@ export async function getUser(userId?: string): Result<User> {
     const authUser = authRes.data?.user;
     if (!authUser) return { data: null, error: null };
 
-    // try profiles table for extra metadata
+    // try users table for extra metadata
     const { data: profile, error: profileErr } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*")
       .eq("id", authUser.id)
       .maybeSingle();

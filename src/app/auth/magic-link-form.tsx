@@ -45,6 +45,7 @@ export default function MagicLinkForm({ onLinkSent }: MagicLinkFormProps) {
         options: {
           shouldCreateUser: true,
           emailRedirectTo: redirectUrl,
+          data: { display_name: name },
         },
       });
 
