@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useState } from "react";
 import {
   X,
   HelpCircle,
@@ -36,6 +37,14 @@ interface LinkModalProps {
 export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
   const { toast } = useToast();
 
+  const [fullUrl, setFullUrl] = useState("");
+  const [domain, setDomain] = useState("links.sh");
+  const [slug, setSlug] = useState("");
+  const [tags, setTags] = useState("");
+  const [favicon, setFavicon] = useState("");
+  const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -68,6 +77,8 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
                 type="url"
                 placeholder="https://example.com/subdomain-here"
                 className="w-full"
+                value={fullUrl}
+                onChange={(e) => setFullUrl(e.target.value)}
               />
             </div>
 
@@ -80,7 +91,7 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
                 </Button>
               </div>
               <div className="flex gap-2">
-                <Select defaultValue="links.sh">
+                <Select value={domain} onValueChange={(v) => setDomain(v)}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -90,7 +101,13 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
                     <SelectItem value="bit.ly">bit.ly</SelectItem>
                   </SelectContent>
                 </Select>
-                <Input type="text" defaultValue="p0g8x1e" className="flex-1" />
+                <Input
+                  type="text"
+                  placeholder="slug (e.g. p0g8x1e)"
+                  className="flex-1"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                />
               </div>
             </div>
 
@@ -104,8 +121,10 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Select tags"
+                  placeholder="tag1, tag2"
                   className="pl-10"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
                 />
               </div>
             </div>
@@ -213,12 +232,38 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
               </Select>
             </div>
 
+            {/* Favicon */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Favicon URL</label>
+              <Input
+                type="url"
+                placeholder="https://example.com/favicon.ico"
+                className="w-full"
+                value={favicon}
+                onChange={(e) => setFavicon(e.target.value)}
+              />
+            </div>
+
             {/* Description */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
               <Textarea
                 placeholder="Add a short description here..."
                 className="min-h-[120px] resize-none"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            {/* Active toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <label className="text-sm font-medium">Active</label>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Switch
+                checked={isActive}
+                onCheckedChange={(v) => setIsActive(Boolean(v))}
               />
             </div>
 
@@ -230,16 +275,25 @@ export function LinkModal({ isOpen, onClose, onCreate }: LinkModalProps) {
               className="w-full gap-2"
               onClick={() => {
                 try {
+                  const slugValue =
+                    slug || Math.random().toString(36).slice(2, 8);
+                  const short = `${domain}/${slugValue}`;
+                  const tagArray = tags
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean);
+
                   const link: Link = {
-                    //id: Date.now().toString(),
-                    favicon: "",
-                    shortUrl: "links.sh/p0g8x1e",
-                    fullUrl: "",
-                    description: "",
+                    favicon: favicon || undefined,
+                    shortUrl: short,
+                    fullUrl: fullUrl || "",
+                    description: description || undefined,
                     clicks: 0,
-                    //createdAt: Date.now().toString(),
-                    isActive: true,
-                  };
+                    isActive: Boolean(isActive),
+                    tags: tagArray.length ? tagArray : undefined,
+                    slug: slugValue,
+                  } as Link;
+
                   onCreate?.(link);
                   onClose();
 

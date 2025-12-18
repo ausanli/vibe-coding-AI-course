@@ -1,65 +1,77 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React, { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { Home, BarChart3, Users, Handshake, DollarSign, Settings, HelpCircle, Link2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { getUser } from "@/lib/supabase/frontend"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dropdown-menu";
+import {
+  Home,
+  BarChart3,
+  Users,
+  Handshake,
+  DollarSign,
+  Settings,
+  HelpCircle,
+  Link2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { getUser } from "@/lib/supabase/frontend";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [
   { icon: Home, label: "Home", href: "#" },
   { icon: BarChart3, label: "Analytics", href: "#" },
   { icon: Users, label: "Customers", href: "#" },
-]
+];
 
 const bottomNavigationItems = [
   { icon: Handshake, label: "Partners", href: "#", badge: "new" },
   { icon: DollarSign, label: "Payouts", href: "#" },
-]
+];
 
 const utilityItems = [
   { icon: Settings, label: "Settings", href: "#" },
   { icon: HelpCircle, label: "Help centre", href: "#" },
-]
+];
 
 export function Sidebar() {
-  const [name, setName] = useState<string>("")
-  const [email, setEmail] = useState<string>("")
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined)
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const res = await getUser()
-        if (!mounted) return
+        const res = await getUser();
+        if (!mounted) return;
         if (res.error) {
-          console.error("Failed to fetch user for sidebar:", res.error)
-          return
+          console.error("Failed to fetch user for sidebar:", res.error);
+          return;
         }
-        const user = res.data
-        if (!user) return
-        setName((user.full_name as string) || (user.email ? String(user.email).split("@")[0] : ""))
-        setEmail((user.email as string) || "")
-        setAvatarUrl((user.avatar_url as string) || undefined)
+        const user = res.data;
+        if (!user) return;
+        setName(
+          (user.full_name as string) ||
+            (user.email ? String(user.email).split("@")[0] : "")
+        );
+        setEmail((user.email as string) || "");
+        setAvatarUrl((user.avatar_url as string) || undefined);
       } catch (err) {
-        console.error(err)
+        console.error(err);
       }
-    })()
+    })();
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   const initials = name
     ? name
@@ -68,11 +80,11 @@ export function Sidebar() {
         .slice(0, 2)
         .join("")
         .toUpperCase()
-    : "JD"
-  const router = useRouter()
-  const { toast } = useToast()
-  const supabase = createClient()
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+    : "JD";
+  const router = useRouter();
+  const { toast } = useToast();
+  const supabase = createClient();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   return (
     <aside className="flex w-64 flex-col border-r border-border bg-sidebar">
@@ -86,12 +98,18 @@ export function Sidebar() {
                   {avatarUrl ? (
                     <AvatarImage src={avatarUrl} />
                   ) : (
-                    <AvatarFallback className="rounded-md bg-primary text-primary-foreground">{initials}</AvatarFallback>
+                    <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
+                      {initials}
+                    </AvatarFallback>
                   )}
                 </Avatar>
                 <div className="flex flex-col text-left w-full">
-                  <span className="text-sm font-medium text-foreground">{name || "John Doe"}</span>
-                  <span className="text-xs text-muted-foreground">{email || "john@example.com"}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {name || "John Doe"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {email || "john@example.com"}
+                  </span>
                 </div>
               </div>
             </button>
@@ -109,7 +127,7 @@ export function Sidebar() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setIsConfirmOpen(false)
+            if (e.target === e.currentTarget) setIsConfirmOpen(false);
           }}
         >
           <div className="bg-card rounded-lg p-6 w-full max-w-sm">
@@ -124,17 +142,17 @@ export function Sidebar() {
               <Button
                 onClick={async () => {
                   try {
-                    const { error } = await supabase.auth.signOut()
-                    if (error) throw error
-                    setIsConfirmOpen(false)
-                    router.push("/auth")
+                    const { error } = await supabase.auth.signOut();
+                    if (error) throw error;
+                    setIsConfirmOpen(false);
+                    router.push("/auth");
                   } catch (err: any) {
-                    console.error("Sign out failed:", err)
+                    console.error("Sign out failed:", err);
                     toast({
                       title: "Sign out failed",
                       description: err?.message || String(err),
                       variant: "error",
-                    })
+                    });
                   }
                 }}
               >
@@ -163,7 +181,7 @@ export function Sidebar() {
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
               item.label === "Home"
                 ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -208,5 +226,5 @@ export function Sidebar() {
         ))}
       </nav>
     </aside>
-  )
+  );
 }

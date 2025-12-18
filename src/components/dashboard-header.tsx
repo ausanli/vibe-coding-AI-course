@@ -12,7 +12,7 @@ import { ChevronDown, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { LinkModal } from "./link-modal";
 import { useToast } from "@/hooks/use-toast";
-import { createLink, Link } from "@/lib/supabase/frontend";
+import type { Link } from "@/lib/supabase/frontend";
 
 export function DashboardHeader({
   onCreate,
@@ -27,18 +27,35 @@ export function DashboardHeader({
       <LinkModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={(link) => {
+        onCreate={async (link) => {
           try {
-            createLink(link);
-            onCreate?.(link);
+            const res = await fetch(`/api/links`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(link),
+            });
+            const payload = await res.json();
+            if (!res.ok) {
+              console.error("Create link failed:", payload);
+              toast({
+                title: "Error",
+                description: payload?.error?.message || "Failed to create link",
+                variant: "error",
+              });
+              return;
+            }
+
+            const created = payload.data as Link;
+            onCreate?.(created || link);
             toast({
               title: "Success!",
               description: "Link created and added to your dashboard.",
             });
-          } catch (error) {
+          } catch (error: any) {
+            console.error(error);
             toast({
               title: "Error",
-              description: "Failed to add link to dashboard. Please try again.",
+              description: error?.message || String(error),
               variant: "error",
             });
           }

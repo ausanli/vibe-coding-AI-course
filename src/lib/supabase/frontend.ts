@@ -2,28 +2,30 @@ import { createClient } from "./client";
 
 // Minimal types for the frontend helpers
 export type User = {
-  id: string;
-  email?: string | null;
   full_name?: string | null;
   avatar_url?: string | null;
-  [key: string]: any;
+  email?: string | null;
+  id?: string;
 };
 
 export type Link = {
-  //id: string;
-  favicon: string;
+  id?: string;
+  createdAt?: string | null;
+  user_id?: string | null;
   shortUrl: string;
   fullUrl: string;
+  tags?: string[] | string | null;
+  isActive: boolean;
+  favicon?: string | null;
+  slug?: string | null;
   description: string;
   clicks: number;
-  //createdAt: string;
-  isActive: boolean;
 };
 
 export type Analytics = {
   totalClicks: number;
   linkCount: number;
-  perLink: Array<{ id: string; short_url?: string | null; clicks: number }>;
+  perLink: Array<{ id: string; shortUrl?: string | null; clicks: number }>;
 };
 
 // Helper result wrapper
@@ -107,7 +109,22 @@ export async function getLink(id: string): Result<Link> {
       .eq("id", id)
       .maybeSingle();
     if (error) return { data: null, error };
-    return { data: (data || null) as Link | null, error: null };
+    const r = data as any;
+    if (!r) return { data: null, error: null };
+    const mapped: Link = {
+      id: r.id,
+      createdAt: r.createdAt ?? r.created_at ?? null,
+      user_id: r.user_id ?? r.userId ?? null,
+      shortUrl: r.shortUrl ?? r.shortUrl ?? "",
+      fullUrl: r.fullUrl ?? r.full_url ?? "",
+      tags: r.tags ?? null,
+      isActive: r.isActive ?? r.is_active ?? false,
+      description: r.description ?? null,
+      favicon: r.favicon ?? null,
+      clicks: r.clicks ?? 0,
+      slug: r.slug ?? null,
+    };
+    return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };
   }
@@ -128,7 +145,21 @@ export async function updateLink(
       .select()
       .maybeSingle();
     if (error) return { data: null, error };
-    return { data: (data || null) as Link | null, error: null };
+    const r = data as any;
+    const mapped: Link = {
+      id: r.id,
+      createdAt: r.createdAt ?? r.created_at ?? null,
+      user_id: r.user_id ?? r.userId ?? null,
+      shortUrl: r.shortUrl ?? r.shortUrl ?? "",
+      fullUrl: r.fullUrl ?? r.full_url ?? "",
+      tags: r.tags ?? null,
+      isActive: r.isActive ?? r.is_active ?? false,
+      description: r.description ?? null,
+      favicon: r.favicon ?? null,
+      clicks: r.clicks ?? 0,
+      slug: r.slug ?? null,
+    };
+    return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };
   }
@@ -146,7 +177,22 @@ export async function deleteLink(id: string): Result<Link> {
       .select()
       .maybeSingle();
     if (error) return { data: null, error };
-    return { data: (data || null) as Link | null, error: null };
+    const r = data as any;
+    if (!r) return { data: null, error: null };
+    const mapped: Link = {
+      id: r.id,
+      createdAt: r.createdAt ?? r.created_at ?? null,
+      user_id: r.user_id ?? r.userId ?? null,
+      shortUrl: r.shortUrl ?? r.shortUrl ?? "",
+      fullUrl: r.fullUrl ?? r.full_url ?? "",
+      tags: r.tags ?? null,
+      isActive: r.isActive ?? r.is_active ?? false,
+      description: r.description ?? null,
+      favicon: r.favicon ?? null,
+      clicks: r.clicks ?? 0,
+      slug: r.slug ?? null,
+    };
+    return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };
   }
@@ -157,11 +203,10 @@ export async function deleteLink(id: string): Result<Link> {
  */
 export async function createLink(link: Link): Result<Link> {
   try {
-    // For testing purposes, force the user_id to the provided test user.
-    // This ensures links created from the frontend during testing are
-    // associated with a predictable user in the DB.
-    const TEST_USER_ID = "77dec93b-c4bb-439f-ae4c-3041a328b380";
-    const toInsert = { ...link, user_id: TEST_USER_ID };
+    // Insert using camelCase field names (server/back-end expects these fields).
+    const toInsert: any = {
+      ...(link as any),
+    };
 
     const { data, error } = await supabase
       .from("links")
@@ -169,7 +214,21 @@ export async function createLink(link: Link): Result<Link> {
       .select()
       .maybeSingle();
     if (error) return { data: null, error };
-    return { data: (data || null) as Link | null, error: null };
+    const r = data as any;
+    const mapped: Link = {
+      id: r.id,
+      createdAt: r.createdAt ?? r.created_at ?? null,
+      user_id: r.user_id ?? r.userId ?? null,
+      shortUrl: r.shortUrl ?? r.shortUrl ?? "",
+      fullUrl: r.fullUrl ?? r.full_url ?? "",
+      tags: r.tags ?? null,
+      isActive: r.isActive ?? r.is_active ?? false,
+      description: r.description ?? null,
+      favicon: r.favicon ?? null,
+      clicks: r.clicks ?? 0,
+      slug: r.slug ?? null,
+    };
+    return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };
   }
@@ -181,18 +240,18 @@ export async function createLink(link: Link): Result<Link> {
  */
 export async function getAnalytics(userId?: string): Result<Analytics> {
   try {
-    let q = supabase.from("links").select("id, short_url, clicks");
+    let q = supabase.from("links").select("id, shortUrl, clicks");
     if (userId) q = q.eq("user_id", userId);
     const { data, error } = await q;
     if (error) return { data: null, error };
     const rows = (data || []) as Array<{
       id: string;
-      short_url?: string | null;
+      shortUrl?: string | null;
       clicks?: number | null;
     }>;
     const perLink = rows.map((r) => ({
       id: r.id,
-      short_url: r.short_url ?? null,
+      shortUrl: r.shortUrl ?? null,
       clicks: r.clicks ?? 0,
     }));
     const totalClicks = perLink.reduce((s, p) => s + (p.clicks || 0), 0);
@@ -200,6 +259,41 @@ export async function getAnalytics(userId?: string): Result<Analytics> {
       data: { totalClicks, linkCount: perLink.length, perLink },
       error: null,
     };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+/**
+ * Fetch links. Optionally filter by userId.
+ */
+export async function getLinks(
+  userId?: string
+): Promise<{ data: Link[] | null; error: any | null }> {
+  try {
+    let q = supabase
+      .from("links")
+      .select(
+        "id, favicon, shortUrl, fullUrl, description, clicks, createdAt, isActive"
+      );
+    if (userId) q = q.eq("user_id", userId);
+    const { data, error } = await q;
+    console.log(data);
+    if (error) return { data: null, error };
+
+    const rows = (data || []) as Array<any>;
+    const mapped: Link[] = rows.map((r) => ({
+      id: r.id,
+      favicon: r.favicon ?? "",
+      shortUrl: r.shortUrl ?? r.shortUrl ?? "",
+      fullUrl: r.full_url ?? r.fullUrl ?? "",
+      description: r.description ?? "",
+      clicks: r.clicks ?? 0,
+      createdAt: r.created_at ?? r.createdAt ?? null,
+      isActive: r.is_active ?? r.isActive ?? false,
+    }));
+
+    return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };
   }
