@@ -25,6 +25,7 @@ type LinksContextValue = {
   getLinkById: (id: string) => LinkShape | undefined;
   createLink: (link: LinkShape) => void;
   updateLink: (id: string, update: Partial<LinkShape>) => void;
+  deleteLink: (id: string) => void;
 };
 
 const LinksContext = createContext<LinksContextValue | null>(null);
@@ -66,6 +67,47 @@ export function LinksProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Listen for global link-created events (emitted by frontend.createLink)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent;
+        const r = ce.detail as any;
+        if (!r) return;
+        const mapped: LinkShape = {
+          id: r.id ?? Math.random().toString(36).slice(2, 9),
+          favicon: r.favicon ?? "",
+          shortUrl: r.shortUrl ?? "",
+          fullUrl: r.fullUrl ?? "",
+          description: r.description ?? "",
+          clicks: r.clicks ?? 0,
+          createdAt: r.createdAt
+            ? new Date(r.createdAt).toLocaleString()
+            : new Date().toLocaleString(),
+          isActive: r.isActive ?? false,
+        };
+        setLinks((prev) => [mapped, ...prev]);
+      } catch (err) {
+        console.error("Failed to handle supabase:link-created event", err);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(
+        "supabase:link-created",
+        handler as EventListener
+      );
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener(
+          "supabase:link-created",
+          handler as EventListener
+        );
+      }
+    };
+  }, []);
+
   const getLinkById = useCallback(
     (id: string) => {
       return links.find((l) => l.id === id);
@@ -83,9 +125,13 @@ export function LinksProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const deleteLink = useCallback((id: string) => {
+    setLinks((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
   const value = useMemo<LinksContextValue>(
-    () => ({ links, getLinkById, createLink, updateLink }),
-    [links, getLinkById, createLink, updateLink]
+    () => ({ links, getLinkById, createLink, updateLink, deleteLink }),
+    [links, getLinkById, createLink, updateLink, deleteLink]
   );
 
   return (

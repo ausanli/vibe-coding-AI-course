@@ -138,14 +138,20 @@ export async function updateLink(
   updates: Partial<Link>
 ): Result<Link> {
   try {
+    // Use select() without coercing to a single object to avoid PostgREST
+    // errors when zero rows are returned (PGRST116). Handle arrays safely.
     const { data, error } = await supabase
       .from("links")
       .update(updates)
       .eq("id", id)
-      .select()
-      .maybeSingle();
+      .select();
     if (error) return { data: null, error };
-    const r = data as any;
+    const rows = (data || []) as any[];
+    if (!rows || rows.length === 0) {
+      // nothing was updated (maybe no matching id or RLS blocked it)
+      return { data: null, error: null };
+    }
+    const r = rows[0] as any;
     const mapped: Link = {
       id: r.id,
       createdAt: r.createdAt ?? r.created_at ?? null,
@@ -228,6 +234,16 @@ export async function createLink(link: Link): Result<Link> {
       clicks: r.clicks ?? 0,
       slug: r.slug ?? null,
     };
+    // Emit a global event so UI layers (e.g. LinksProvider) can update immediately
+    try {
+      if (typeof window !== "undefined" && window.dispatchEvent) {
+        window.dispatchEvent(
+          new CustomEvent("supabase:link-created", { detail: mapped })
+        );
+      }
+    } catch (e) {
+      // ignore event dispatch failures
+    }
     return { data: mapped, error: null };
   } catch (error) {
     return { data: null, error };

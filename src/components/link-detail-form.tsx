@@ -8,10 +8,35 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useLinks } from "@/hooks/use-links"
 import { RefreshCw, HelpCircle, Tag, Folder, Target, Calendar, Lock, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { updateLink as updateLinkApi } from "@/lib/supabase/frontend"
+import { useToast } from "@/hooks/use-toast"
 
 export function LinkDetailForm({ id }: { id: string }) {
   const { getLinkById, updateLink } = useLinks()
   const link = getLinkById(id)
+  const { toast } = useToast()
+  const router = useRouter()
+
+  // Local editable state for the form
+  const [shortSlug, setShortSlug] = useState("")
+  const [description, setDescription] = useState("")
+  const [isActiveState, setIsActiveState] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (!link) return
+    // extract slug portion from shortUrl
+    try {
+      const parts = link.shortUrl.split("/")
+      setShortSlug(parts.pop() || "")
+    } catch {
+      setShortSlug("")
+    }
+    setDescription(link.description ?? "")
+    setIsActiveState(!!link.isActive)
+  }, [link])
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Short Link Section */}
@@ -30,11 +55,8 @@ export function LinkDetailForm({ id }: { id: string }) {
             </Select>
             <Input
               id="short-link"
-              defaultValue={link?.shortUrl.split("/").pop() ?? ""}
-              onChange={(e) => {
-                const domain = (link?.shortUrl.includes("/") ? link?.shortUrl.split("/")[0] : "short.ly") || "short.ly"
-                updateLink(id, { shortUrl: `${domain}/${e.target.value}` })
-              }}
+              value={shortSlug}
+              onChange={(e) => setShortSlug(e.target.value)}
               className="flex-1 border-0 focus-visible:ring-0"
             />
           </div>
@@ -105,8 +127,8 @@ export function LinkDetailForm({ id }: { id: string }) {
         <Textarea
           id="description"
           placeholder="Add a short description here…"
-          defaultValue={link?.description ?? ""}
-          onChange={(e) => updateLink(id, { description: e.target.value })}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           className="min-h-[100px] resize-none"
         />
       </div>
@@ -143,7 +165,49 @@ export function LinkDetailForm({ id }: { id: string }) {
 
       {/* Actions */}
       <div className="flex justify-end">
-        <Button onClick={() => { /* no-op for mock flow */ }}>Save</Button>
+          <Button
+            onClick={async () => {
+              if (!link) return
+              setIsSaving(true)
+              try {
+                // determine domain from existing shortUrl or default
+                const domain = link.shortUrl?.includes("/") ? link.shortUrl.split("/")[0] : link.shortUrl || "short.ly"
+                const newShort = `${domain}/${shortSlug}`
+                const updates: any = {
+                  shortUrl: newShort,
+                  description,
+                  isActive: isActiveState,
+                }
+
+                const res = await updateLinkApi(id, updates)
+                if (res.error) {
+                  console.error("Update failed", res.error)
+                  toast({ title: "Update failed", description: res.error?.message || "Could not update link", variant: "error" })
+                  return
+                }
+
+                // update local provider state with the new values
+                updateLink(id, {
+                  shortUrl: res.data?.shortUrl ?? newShort,
+                  description: res.data?.description ?? description,
+                  isActive: res.data?.isActive ?? isActiveState,
+                })
+
+                toast({ title: "Saved", description: "Link updated successfully." })
+
+                // navigate back to main links page
+                router.push("/")
+              } catch (err) {
+                console.error(err)
+                toast({ title: "Update failed", description: String(err), variant: "error" })
+              } finally {
+                setIsSaving(false)
+              }
+            }}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </Button>
       </div>
     </div>
   )
