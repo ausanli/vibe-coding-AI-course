@@ -29,7 +29,7 @@ export default function DashboardContent() {
 
   return (
     <>
-  <DashboardHeader onCreate={handleCreate} />
+      <DashboardHeader onCreate={handleCreate} />
       <div className="flex flex-col gap-3">
         {links.map((link) => (
           <LinkCard key={link.id} {...link} />

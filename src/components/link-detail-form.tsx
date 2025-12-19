@@ -1,42 +1,57 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useLinks } from "@/hooks/use-links"
-import { RefreshCw, HelpCircle, Tag, Folder, Target, Calendar, Lock, TrendingUp } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { updateLink as updateLinkApi } from "@/lib/supabase/frontend"
-import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useLinks } from "@/hooks/use-links";
+import {
+  RefreshCw,
+  HelpCircle,
+  Tag,
+  Folder,
+  Target,
+  Calendar,
+  Lock,
+  TrendingUp,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { updateLink as updateLinkApi } from "@/lib/supabase/frontend";
+import { useToast } from "@/hooks/use-toast";
 
 export function LinkDetailForm({ id }: { id: string }) {
-  const { getLinkById, updateLink } = useLinks()
-  const link = getLinkById(id)
-  const { toast } = useToast()
-  const router = useRouter()
+  const { getLinkById, updateLink } = useLinks();
+  const link = getLinkById(id);
+  const { toast } = useToast();
+  const router = useRouter();
 
   // Local editable state for the form
-  const [shortSlug, setShortSlug] = useState("")
-  const [description, setDescription] = useState("")
-  const [isActiveState, setIsActiveState] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [shortSlug, setShortSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [isActiveState, setIsActiveState] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!link) return
+    if (!link) return;
     // extract slug portion from shortUrl
     try {
-      const parts = link.shortUrl.split("/")
-      setShortSlug(parts.pop() || "")
+      const parts = link.shortUrl.split("/");
+      setShortSlug(parts.pop() || "");
     } catch {
-      setShortSlug("")
+      setShortSlug("");
     }
-    setDescription(link.description ?? "")
-    setIsActiveState(!!link.isActive)
-  }, [link])
+    setDescription(link.description ?? "");
+    setIsActiveState(!!link.isActive);
+  }, [link]);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Short Link Section */}
@@ -99,7 +114,10 @@ export function LinkDetailForm({ id }: { id: string }) {
         <Select defaultValue="links" onValueChange={() => {}}>
           <SelectTrigger id="folder">
             <div className="flex items-center gap-2">
-              <div className="flex h-5 w-5 items-center justify-center rounded" style={{ backgroundColor: "#1c2b1c" }}>
+              <div
+                className="flex h-5 w-5 items-center justify-center rounded"
+                style={{ backgroundColor: "#1c2b1c" }}
+              >
                 <Folder className="h-3.5 w-3.5" style={{ color: "#04C40A" }} />
               </div>
               <SelectValue />
@@ -112,7 +130,10 @@ export function LinkDetailForm({ id }: { id: string }) {
                   className="flex h-5 w-5 items-center justify-center rounded"
                   style={{ backgroundColor: "#1c2b1c" }}
                 >
-                  <Folder className="h-3.5 w-3.5" style={{ color: "#04C40A" }} />
+                  <Folder
+                    className="h-3.5 w-3.5"
+                    style={{ color: "#04C40A" }}
+                  />
                 </div>
                 Links
               </div>
@@ -165,50 +186,63 @@ export function LinkDetailForm({ id }: { id: string }) {
 
       {/* Actions */}
       <div className="flex justify-end">
-          <Button
-            onClick={async () => {
-              if (!link) return
-              setIsSaving(true)
-              try {
-                // determine domain from existing shortUrl or default
-                const domain = link.shortUrl?.includes("/") ? link.shortUrl.split("/")[0] : link.shortUrl || "short.ly"
-                const newShort = `${domain}/${shortSlug}`
-                const updates: any = {
-                  shortUrl: newShort,
-                  description,
-                  isActive: isActiveState,
-                }
+        <Button
+          onClick={async () => {
+            if (!link) return;
+            setIsSaving(true);
+            try {
+              // determine domain from existing shortUrl or default
+              const domain = link.shortUrl?.includes("/")
+                ? link.shortUrl.split("/")[0]
+                : link.shortUrl || "short.ly";
+              const newShort = `${domain}/${shortSlug}`;
+              const updates: any = {
+                shortUrl: newShort,
+                description,
+                isActive: isActiveState,
+              };
 
-                const res = await updateLinkApi(id, updates)
-                if (res.error) {
-                  console.error("Update failed", res.error)
-                  toast({ title: "Update failed", description: res.error?.message || "Could not update link", variant: "error" })
-                  return
-                }
-
-                // update local provider state with the new values
-                updateLink(id, {
-                  shortUrl: res.data?.shortUrl ?? newShort,
-                  description: res.data?.description ?? description,
-                  isActive: res.data?.isActive ?? isActiveState,
-                })
-
-                toast({ title: "Saved", description: "Link updated successfully." })
-
-                // navigate back to main links page
-                router.push("/")
-              } catch (err) {
-                console.error(err)
-                toast({ title: "Update failed", description: String(err), variant: "error" })
-              } finally {
-                setIsSaving(false)
+              const res = await updateLinkApi(id, updates);
+              if (res.error) {
+                console.error("Update failed", res.error);
+                toast({
+                  title: "Update failed",
+                  description: res.error?.message || "Could not update link",
+                  variant: "error",
+                });
+                return;
               }
-            }}
-            disabled={isSaving}
-          >
-            {isSaving ? "Saving..." : "Save"}
-          </Button>
+
+              // update local provider state with the new values
+              updateLink(id, {
+                shortUrl: res.data?.shortUrl ?? newShort,
+                description: res.data?.description ?? description,
+                isActive: res.data?.isActive ?? isActiveState,
+              });
+
+              toast({
+                title: "Saved",
+                description: "Link updated successfully.",
+              });
+
+              // navigate back to main links page
+              router.push("/");
+            } catch (err) {
+              console.error(err);
+              toast({
+                title: "Update failed",
+                description: String(err),
+                variant: "error",
+              });
+            } finally {
+              setIsSaving(false);
+            }
+          }}
+          disabled={isSaving}
+        >
+          {isSaving ? "Saving..." : "Save"}
+        </Button>
       </div>
     </div>
-  )
+  );
 }

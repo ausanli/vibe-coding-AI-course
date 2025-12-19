@@ -103,7 +103,8 @@ export function LinkCard({
                     console.error("Delete failed:", res.error);
                     toast({
                       title: "Delete failed",
-                      description: res.error?.message || "Could not delete link",
+                      description:
+                        res.error?.message || "Could not delete link",
                       variant: "error",
                     });
                     return;
