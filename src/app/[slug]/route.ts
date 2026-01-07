@@ -6,7 +6,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } }
+  context: { params: Record<string, string | string[]> }
 ) {
   if (!supabaseUrl || !serviceRoleKey) {
     return NextResponse.json(
@@ -18,7 +18,8 @@ export async function GET(
     );
   }
 
-  const { slug } = (await params) || {};
+  const rawSlug = context?.params?.slug;
+  const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
   if (!slug) {
     return NextResponse.redirect(new URL("/302", req.url));
   }
