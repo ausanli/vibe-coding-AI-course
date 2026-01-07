@@ -4,10 +4,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export async function GET(
-  req: Request,
-  context: { params: Record<string, string | string[]> }
-) {
+export async function GET(req: Request, context: any) {
   if (!supabaseUrl || !serviceRoleKey) {
     return NextResponse.json(
       {
