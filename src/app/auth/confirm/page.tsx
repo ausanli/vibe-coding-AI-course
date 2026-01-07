@@ -30,11 +30,11 @@ export default function ConfirmPage() {
         const refresh_token = params.get("refresh_token");
         const type = params.get("type");
 
-        if (access_token) {
+        if (access_token && refresh_token) {
           // Set session client-side
           const { error } = await supabase.auth.setSession({
             access_token,
-            refresh_token: refresh_token || undefined,
+            refresh_token: refresh_token,
           });
           if (error) throw error;
           toast({
