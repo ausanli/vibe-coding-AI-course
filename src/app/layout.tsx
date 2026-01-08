@@ -5,6 +5,7 @@ import { LinksProvider } from "@/hooks/use-links";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
+import GoogleAnalytics from "@/components/google-analytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
           />
           {/* Client component mounts and wires the real handler */}
           <Analytics />
+          <GoogleAnalytics />
         </LinksProvider>
       </body>
     </html>
