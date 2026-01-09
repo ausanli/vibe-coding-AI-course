@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -73,14 +73,15 @@ export function Sidebar() {
     };
   }, []);
 
-  const initials = name
-    ? name
-        .split(" ")
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "JD";
+  const initials = useMemo(() => {
+    if (!name) return "JD";
+    return name
+      .split(" ")
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }, [name]);
   const router = useRouter();
   const { toast } = useToast();
   const supabase = createClient();
@@ -173,57 +174,69 @@ export function Sidebar() {
 
       {/* Main Navigation */}
       <nav className="flex-1 space-y-1 border-b border-border p-4">
-        {navigationItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-              item.label === "Home"
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </a>
-        ))}
+        {useMemo(
+          () =>
+            navigationItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  item.label === "Home"
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </a>
+            )),
+          []
+        )}
       </nav>
 
       {/* Bottom Navigation */}
       <nav className="space-y-1 border-b border-border p-4">
-        {bottomNavigationItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-            {item.badge && (
-              <span
-                className="ml-auto rounded-full px-2 py-0.5 text-xs font-medium"
-                style={{ backgroundColor: "#1c2b1c", color: "#04c40a" }}
+        {useMemo(
+          () =>
+            bottomNavigationItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
-                {item.badge}
-              </span>
-            )}
-          </a>
-        ))}
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span
+                    className="ml-auto rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{ backgroundColor: "#1c2b1c", color: "#04c40a" }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </a>
+            )),
+          []
+        )}
       </nav>
 
       {/* Utility Items */}
       <nav className="space-y-1 p-4">
-        {utilityItems.map((item) => (
-          <a
-            key={item.label}
-            href={item.href}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </a>
-        ))}
+        {useMemo(
+          () =>
+            utilityItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </a>
+            )),
+          []
+        )}
       </nav>
     </aside>
   );

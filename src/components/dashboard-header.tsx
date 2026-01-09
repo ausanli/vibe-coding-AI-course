@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,12 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, Plus, Search } from "lucide-react";
-import { useState } from "react";
 import { LinkModal } from "./link-modal";
 import { useToast } from "@/hooks/use-toast";
 import type { Link } from "@/lib/supabase/frontend";
 
-export function DashboardHeader({
+function DashboardHeaderInner({
   onCreate,
 }: {
   onCreate?: (link: Link) => void;
@@ -22,44 +22,50 @@ export function DashboardHeader({
   const { toast } = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreate = useCallback(
+    async (link: Link) => {
+      try {
+        const res = await fetch(`/api/links`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(link),
+        });
+        const payload = await res.json();
+        if (!res.ok) {
+          console.error("Create link failed:", payload);
+          toast({
+            title: "Error",
+            description: payload?.error?.message || "Failed to create link",
+            variant: "error",
+          });
+          return;
+        }
+
+        const created = payload.data as Link;
+        onCreate?.(created || link);
+        toast({
+          title: "Success!",
+          description: "Link created and added to your dashboard.",
+        });
+      } catch (error: any) {
+        console.error(error);
+        toast({
+          title: "Error",
+          description: error?.message || String(error),
+          variant: "error",
+        });
+      }
+    },
+    [onCreate, toast]
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <LinkModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={async (link) => {
-          try {
-            const res = await fetch(`/api/links`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(link),
-            });
-            const payload = await res.json();
-            if (!res.ok) {
-              console.error("Create link failed:", payload);
-              toast({
-                title: "Error",
-                description: payload?.error?.message || "Failed to create link",
-                variant: "error",
-              });
-              return;
-            }
-
-            const created = payload.data as Link;
-            onCreate?.(created || link);
-            toast({
-              title: "Success!",
-              description: "Link created and added to your dashboard.",
-            });
-          } catch (error: any) {
-            console.error(error);
-            toast({
-              title: "Error",
-              description: error?.message || String(error),
-              variant: "error",
-            });
-          }
-        }}
+        onCreate={handleCreate}
       />
       {/* Title and Create Button */}
       <div className="flex items-center justify-between">
@@ -100,3 +106,5 @@ export function DashboardHeader({
     </div>
   );
 }
+
+export const DashboardHeader = React.memo(DashboardHeaderInner);

@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, MousePointer, Trash } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,7 @@ interface LinkCardProps {
   slug?: string;
 }
 
-export function LinkCard({
+function LinkCardInner({
   id,
   favicon,
   shortUrl,
@@ -36,23 +37,25 @@ export function LinkCard({
   const { deleteLink } = useLinks();
   const { toast } = useToast();
 
-  const displayClicks = isLoading ? clicks : realtimeClicks;
+  const displayClicks = useMemo(
+    () => (isLoading ? clicks : realtimeClicks),
+    [isLoading, clicks, realtimeClicks]
+  );
 
   // Determine destination for redirect: prefer slug if present, else extract path from shortUrl, fall back to fullUrl
-  const destination = slug
-    ? `/${slug}`
-    : (() => {
-        try {
-          const url = new URL(
-            shortUrl.startsWith("http") ? shortUrl : `https://${shortUrl}`
-          );
-          const p = url.pathname.replace(/^\//, "");
-          return p ? `/${p}` : fullUrl;
-        } catch {
-          // if parsing fails, fallback
-          return fullUrl;
-        }
-      })();
+  const destination = useMemo(() => {
+    if (slug) return `/${slug}`;
+    try {
+      const url = new URL(
+        shortUrl.startsWith("http") ? shortUrl : `https://${shortUrl}`
+      );
+      const p = url.pathname.replace(/^\//, "");
+      return p ? `/${p}` : fullUrl;
+    } catch {
+      // if parsing fails, fallback
+      return fullUrl;
+    }
+  }, [slug, shortUrl, fullUrl]);
 
   return (
     <a
@@ -153,3 +156,5 @@ export function LinkCard({
     </a>
   );
 }
+
+export const LinkCard = React.memo(LinkCardInner);
