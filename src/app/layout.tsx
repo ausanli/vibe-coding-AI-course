@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import GoogleAnalytics from "@/components/google-analytics";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
           {/* Client component mounts and wires the real handler */}
           <Analytics />
           <GoogleAnalytics />
+          <SpeedInsights />
         </LinksProvider>
       </body>
     </html>
